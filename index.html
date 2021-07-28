@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <body>
+
+        <main class="main-content">
+            <h1>To do list on pure JS</h1>
+            <img class="add-icon" src="assets/icons8-add-50.png"></img>
+            <div class="actions-buttons-wrapper">
+                <button class="save-list btn btn-blue">Save the list</button>
+                <button class="restore-list btn btn-red">Restore previous list</button>
+            </div>
+            <ul class="list-content collection"></ul>
+        </main>
+
+        <div id="myModal" class="modal">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <p>Enter your item of to do list</p>
+                <input type="text" id="item-content"></input>
+                <div class="button-wrapper"><button class="create-item-button">Create</button></div>
+            </div>
+
+        </div>
+
+
+    </body>
+
+    <script src="script.js"></script>
+
+</html>
