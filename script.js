@@ -20,7 +20,7 @@ window.onload = function() {
     initializeEventListener(addContentButton, "click", addItem)
     initializeEventListener(uploadToStorageButton, "click", uploadToStorage)
     initializeEventListener(downloadFromStorage, "click", getFromStorage)
-    initializeEventListener(sortAscending, "click", sortByDateAscending)
+    initializeEventListener(sortAscending, "click", sortByDateDescending)
 
     function openCreatePopup() {
 
@@ -151,6 +151,7 @@ window.onload = function() {
 
     function reRenderList() {
         for (let i = 0; i < listOfToDoes.length; i++) {
+
             let tmpItem = document.createElement("li");
             tmpItem.className = "centered collection-item";
             tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
@@ -179,7 +180,7 @@ window.onload = function() {
         reRenderList();
     }
 
-    function sortByDateAscending() {
+    function sortByDateDescending() {
 
         listOfToDoes.sort(function(a, b) {
             return b.ID - a.ID;
