@@ -1,41 +1,28 @@
 window.onload = function() {
-    let listContainer = document.getElementsByClassName("list-content")[0];
+    let listContainer = document.getElementById("list-content");
 
     let addIcon = document.getElementsByClassName("add-icon")[0];
     let addContentButton = document.getElementsByClassName("create-item-button")[0];
 
     let uploadToStorageButton = document.getElementsByClassName("save-list")[0];
+    let sortAscending = document.getElementsByClassName("sort")[0];
     let downloadFromStorage = document.getElementsByClassName("restore-list")[0];
 
     let listOfToDoes = [];
 
-    addIcon.addEventListener("click", () => {
-        openCreatePopup();
-    })
-
-    addContentButton.addEventListener("click", () => {
-        addItem();
-    })
-
-    uploadToStorageButton.onclick = function() {
-        uploadToStorage();
-    }
-
-    downloadFromStorage.onclick = function() {
-        getFromStorage();
-    }
-
-    function Edit() {
-
-        let classes = that.classList;
-        let resClass = classes.filter((item) => {
-            return typeof item.charAt(5) === Number;
+    function initializeEventListener(htmlElement, event, action) {
+        htmlElement.addEventListener(event, () => {
+            action();
         })
     }
 
-    function openCreatePopup() {
+    initializeEventListener(addIcon, "click", openCreatePopup)
+    initializeEventListener(addContentButton, "click", addItem)
+    initializeEventListener(uploadToStorageButton, "click", uploadToStorage)
+    initializeEventListener(downloadFromStorage, "click", getFromStorage)
+    initializeEventListener(sortAscending, "click", sortByDateAscending)
 
-        console.log('debugger');
+    function openCreatePopup() {
 
         let modal = document.getElementById("myModal");
 
@@ -59,138 +46,141 @@ window.onload = function() {
         }
     }
 
+    function generateItemMarkup(ID, content, currentDate) {
+
+        let date = currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + currentDate.getDate();
+        let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+
+        let dateTime = date + ' ' + time;
+
+        return content ? `<div class="item-${ID} item-wrapper">
+                    <div class="content-wrapper">
+                        <p class="content-item item-${ID}">${content}</p>
+                        <p class="date">${dateTime}</p>
+                    </div>
+                    <div class="perform-buttons-wrapper">
+                        <button class="btn-blue item-${ID}">Edit</button>
+                    </div>
+                </div>` : alert("Error")
+    }
+
     function addItem() {
 
-        let itemContent = document.querySelectorAll("#item-content")[0];
-        let item = document.createElement("li");
+        let currentDate = new Date();
+
+
+        let contentFromInput = document.getElementById("item-content");
+        let newListItem = document.createElement("li");
         let uniqueID = new Date().getTime();
-        item.className = "centered collection-item";
-        item.innerHTML = `<div class="item-${uniqueID} item-wrapper">
-                                <div class="content-wrapper">
-                                    <p class="content-item item-${uniqueID}">${itemContent.value}</p>
-                                </div>
-                                <div class="perform-buttons-wrapper">
-                                    <button class="btn-blue item-${uniqueID}">Edit</button>
-                                </div>
-                            </div>`;
-        item.addEventListener("click", function(event) {
 
+        newListItem.className = "centered collection-item";
+        newListItem.innerHTML = generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
 
-            let item = event.currentTarget;
+        defineItemEditing(newListItem, uniqueID)
 
-            let liElement = event.path[3];
-
-            if (item === liElement) {
-
-                let content = liElement.querySelectorAll(".content-item")[0].textContent
-
-                let innerDiv = item.querySelectorAll(".item-wrapper")[0]
-
-                innerDiv.style.display = "none";
-
-                let input = document.createElement('input');
-                input.type = "string";
-                input.value = content;
-                input.onkeypress = "onKeyDown()"
-                item.appendChild(input)
-
-                input.addEventListener("keydown", function() {
-                    if (window.event.keyCode == 13) {
-                        input.style.display = "none"
-
-                        let className = innerDiv.classList[0]; // переписати на більш стабільне
-                        innerDiv.style.display = "block";
-                        let elementToUpdate = document.querySelectorAll("p." + className)[0];
-                        elementToUpdate.innerHTML = input.value;
-                        debugger;
-                        for (let index = 0; index < listOfToDoes.length; index++) {
-                            if (listOfToDoes[index].ID === uniqueID) {
-                                listOfToDoes[index].content = input.value;
-                            }
-
-                        }
-
-                    }
-                })
-            }
-
-
-        })
-
-        let listEntity = { content: itemContent.value, ID: uniqueID }
-        listContainer.appendChild(item);
+        let listEntity = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
+        listContainer.appendChild(newListItem);
         listOfToDoes.push(listEntity);
         console.log(listOfToDoes);
 
-        itemContent.value = '';
+        contentFromInput.value = '';
 
+    }
+
+    function isInputClicked(event) {
+        return event.path[0].nodeName == "INPUT"
+    }
+
+    function updateListModel(uniqueID, value) {
+        for (let index = 0; index < listOfToDoes.length; index++) {
+            if (listOfToDoes[index].ID === uniqueID) {
+                listOfToDoes[index].content = value;
+            }
+        }
+    }
+
+    function toogleDisplay(el) {
+        el.style.display = (el.style.display === "") ? "none" : "";
+    }
+
+    function openInlineEditing(newListItem, itemToEdit) {
+
+        let innerDiv = newListItem.querySelectorAll(".item-wrapper")[0]
+
+        toogleDisplay(innerDiv)
+
+        let input = document.createElement('input');
+        input.type = "string";
+        console.log(itemToEdit);
+        input.value = itemToEdit.content;
+
+        input.onkeypress = "onKeyDown()"
+
+        newListItem.appendChild(input)
+
+        input.addEventListener("keydown", function() {
+
+            if (window.event.keyCode == 13) {
+
+                toogleDisplay(input);
+                toogleDisplay(innerDiv);
+                let elementToUpdate = document.querySelectorAll(`p.item-${itemToEdit.ID}`)[0];
+                elementToUpdate.innerHTML = input.value;
+
+                updateListModel(itemToEdit.ID, input.value)
+            }
+        })
+    }
+
+    function defineItemEditing(newListItem, uniqueID) {
+        newListItem.addEventListener("click", function(event) {
+
+            let itemToEdit = listOfToDoes.filter(function(item) {
+                return item.ID == uniqueID
+            })[0]
+
+            if (!isInputClicked(event)) {
+                openInlineEditing(newListItem, itemToEdit);
+            }
+
+        })
     }
 
     function uploadToStorage() {
         localStorage.setItem("listOfToDoes", JSON.stringify(listOfToDoes));
     }
 
-    function getFromStorage() {
-        let storage = JSON.parse(localStorage.getItem("listOfToDoes"));
-        listOfToDoes = storage;
-        debugger;
+    function reRenderList() {
         for (let i = 0; i < listOfToDoes.length; i++) {
             let tmpItem = document.createElement("li");
             tmpItem.className = "centered collection-item";
-            tmpItem.innerHTML = `<div class="item-${listOfToDoes[i].ID} item-wrapper">
-            <div class="content-wrapper">
-                <p class="content-item item-${listOfToDoes[i].ID}">${listOfToDoes[i].content}</p>
-            </div>
-            <div class="perform-buttons-wrapper">
-                <button class="btn-blue item-${listOfToDoes[i].ID}">Edit</button>
-            </div>
-        </div>`
-            tmpItem.addEventListener("click", function(event) {
+            tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
 
-
-                let item = event.currentTarget;
-
-                let liElement = event.path[3];
-
-                if (item === liElement) {
-
-                    let content = liElement.querySelectorAll(".content-item")[0].textContent
-
-                    let innerDiv = item.querySelectorAll(".item-wrapper")[0]
-
-                    innerDiv.style.display = "none";
-
-                    let input = document.createElement('input');
-                    input.type = "string";
-                    input.value = content;
-                    input.onkeypress = "onKeyDown()"
-                    item.appendChild(input)
-
-                    input.addEventListener("keydown", function() {
-                        if (window.event.keyCode == 13) {
-                            input.style.display = "none"
-
-                            let className = innerDiv.classList[0]; // переписати на більш стабільне
-                            innerDiv.style.display = "block";
-                            let elementToUpdate = document.querySelectorAll("p." + className)[0];
-                            elementToUpdate.innerHTML = input.value;
-                            debugger;
-                            for (let index = 0; index < listOfToDoes.length; index++) {
-                                if (listOfToDoes[index].ID === listOfToDoes[i].ID) {
-                                    listOfToDoes[index].content = input.value;
-                                }
-
-                            }
-
-                        }
-                    })
-                }
-
-
-            })
+            defineItemEditing(tmpItem, listOfToDoes[i].ID)
 
             listContainer.appendChild(tmpItem);
         }
+    }
+
+    function getFromStorage() {
+        let storage = JSON.parse(localStorage.getItem("listOfToDoes"));
+        listOfToDoes = storage;
+
+        reRenderList();
+    }
+
+    function sortByDateAscending() {
+
+        listOfToDoes.sort(function(a, b) {
+            return b.ID - a.ID;
+        })
+
+        let mainUL = document.getElementById("list-content");
+
+        while (mainUL.firstChild)
+            mainUL.removeChild(mainUL.firstChild)
+
+        reRenderList();
     }
 
 }

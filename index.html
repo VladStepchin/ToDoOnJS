@@ -14,10 +14,11 @@
             <h1>To do list on pure JS</h1>
             <img class="add-icon" src="assets/icons8-add-50.png"></img>
             <div class="actions-buttons-wrapper">
-                <button class="save-list btn btn-blue">Save the list</button>
-                <button class="restore-list btn btn-red">Restore previous list</button>
+                <button class="save-list btn btn-blue">Save to local storage</button>
+                <button class="restore-list btn btn-red">Restore from local storage</button>
+                <button class="sort btn btn-blue">Back sort</button>
             </div>
-            <ul class="list-content collection"></ul>
+            <ul id="list-content" class="collection"></ul>
         </main>
 
         <div id="myModal" class="modal">
