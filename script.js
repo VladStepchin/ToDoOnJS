@@ -82,7 +82,6 @@ window.onload = function() {
         listContainer.appendChild(newListItem);
         listOfToDoes.push(listEntity);
         console.log(listOfToDoes);
-
         contentFromInput.value = '';
 
     }
@@ -163,7 +162,18 @@ window.onload = function() {
     }
 
     function getFromStorage() {
+
         let storage = JSON.parse(localStorage.getItem("listOfToDoes"));
+
+        storage.map(function(item, i, arr) {
+
+            let date = new Date(arr[i].date)
+
+            date.setDate(date.getDate() + 7)
+
+            return arr[i].date = date;
+        })
+
         listOfToDoes = storage;
 
         reRenderList();
