@@ -22,9 +22,7 @@ h1 {
 }
 
 #list-content {
-    left: 18%;
-    width: 61%;
-    top: 15%;
+    text-align: center;
 }
 
 ul.collection {
@@ -65,7 +63,8 @@ ul.collection {
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 80%;
+    width: 70%;
+    text-align: center;
 }
 
 
@@ -99,11 +98,12 @@ ul.collection {
 }
 
 .button-wrapper {
-    padding: 1%;
+    padding: 2%;
 }
 
 .actions-buttons-wrapper {
     left: 40%;
+    text-align: center;
 }
 
 
@@ -177,5 +177,8 @@ button.btn.btn-red:active {
     }
     .add-icon {
         left: 43%;
+    }
+    #list-content {
+        margin-right: 10%;
     }
 }

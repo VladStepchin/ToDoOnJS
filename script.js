@@ -55,11 +55,12 @@ window.onload = function() {
 
         return content ? `<div class="item-${ID} item-wrapper">
                     <div class="content-wrapper">
-                        <p class="content-item item-${ID}">${content}</p>
-                        <p class="date">${dateTime}</p>
+                        <p class="content-item item-${ID}"><b>${content}</b></p>
+                        <p class="date">Date: ${dateTime}</p>
                     </div>
                     <div class="perform-buttons-wrapper">
-                        <button class="btn-blue item-${ID}">Edit</button>
+                        <button class="btn btn-red item-${ID}">Edit</button>
+                        <button class="btn btn-blue remove-btn item-${ID}">Remove</button>
                     </div>
                 </div>` : alert("Error")
     }
@@ -77,13 +78,33 @@ window.onload = function() {
         newListItem.innerHTML = generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
 
         defineItemEditing(newListItem, uniqueID)
+        defineItemRemove(newListItem, uniqueID);
 
         let listEntity = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
         listContainer.appendChild(newListItem);
         listOfToDoes.push(listEntity);
-        console.log(listOfToDoes);
+
         contentFromInput.value = '';
 
+    }
+
+    function defineItemRemove(newListItem, uniqueID) {
+
+        let buttonRemove = newListItem.querySelectorAll(`.remove-btn.item-${uniqueID}`)[0];
+
+        buttonRemove.addEventListener("click", function(event) {
+
+            event.stopPropagation();
+
+            listOfToDoes = listOfToDoes.filter(function(item) {
+                return item.ID != uniqueID
+            });
+
+            clearViewList();
+
+            reRenderList();
+
+        })
     }
 
     function isInputClicked(event) {
@@ -109,8 +130,9 @@ window.onload = function() {
         toogleDisplay(innerDiv)
 
         let input = document.createElement('input');
+
         input.type = "string";
-        console.log(itemToEdit);
+
         input.value = itemToEdit.content;
 
         input.onkeypress = "onKeyDown()"
@@ -123,6 +145,7 @@ window.onload = function() {
 
                 toogleDisplay(input);
                 toogleDisplay(innerDiv);
+
                 let elementToUpdate = document.querySelectorAll(`p.item-${itemToEdit.ID}`)[0];
                 elementToUpdate.innerHTML = input.value;
 
@@ -133,7 +156,6 @@ window.onload = function() {
 
     function defineItemEditing(newListItem, uniqueID) {
         newListItem.addEventListener("click", function(event) {
-
             let itemToEdit = listOfToDoes.filter(function(item) {
                 return item.ID == uniqueID
             })[0]
@@ -150,15 +172,18 @@ window.onload = function() {
     }
 
     function reRenderList() {
-        for (let i = 0; i < listOfToDoes.length; i++) {
 
-            let tmpItem = document.createElement("li");
-            tmpItem.className = "centered collection-item";
-            tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
+        if (listOfToDoes.length) {
+            for (let i = 0; i < listOfToDoes.length; i++) {
 
-            defineItemEditing(tmpItem, listOfToDoes[i].ID)
+                let tmpItem = document.createElement("li");
+                tmpItem.className = "centered collection-item";
+                tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
 
-            listContainer.appendChild(tmpItem);
+                defineItemEditing(tmpItem, listOfToDoes[i].ID)
+
+                listContainer.appendChild(tmpItem);
+            }
         }
     }
 
@@ -169,9 +194,7 @@ window.onload = function() {
         storage.map(function(item, i, arr) {
 
             let date = new Date(arr[i].date)
-
             date.setDate(date.getDate() + 7)
-
             return arr[i].date = date;
         })
 
@@ -186,12 +209,17 @@ window.onload = function() {
             return b.ID - a.ID;
         })
 
+        clearViewList();
+
+        reRenderList();
+    }
+
+    function clearViewList() {
+
         let mainUL = document.getElementById("list-content");
 
         while (mainUL.firstChild)
             mainUL.removeChild(mainUL.firstChild)
-
-        reRenderList();
     }
 
 }
