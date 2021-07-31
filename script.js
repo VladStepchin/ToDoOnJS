@@ -94,13 +94,13 @@ window.onload = function() {
 
         buttonRemove.addEventListener("click", function(event) {
 
-            event.stopPropagation();
-
             listOfToDoes = listOfToDoes.filter(function(item) {
                 return item.ID != uniqueID
             });
 
             clearViewList();
+
+            event.stopPropagation();
 
             reRenderList();
 
@@ -147,7 +147,7 @@ window.onload = function() {
                 toogleDisplay(innerDiv);
 
                 let elementToUpdate = document.querySelectorAll(`p.item-${itemToEdit.ID}`)[0];
-                elementToUpdate.innerHTML = input.value;
+                elementToUpdate.innerHTML = `<b>${input.value}</b>`;
 
                 updateListModel(itemToEdit.ID, input.value)
             }
@@ -155,7 +155,9 @@ window.onload = function() {
     }
 
     function defineItemEditing(newListItem, uniqueID) {
+
         newListItem.addEventListener("click", function(event) {
+
             let itemToEdit = listOfToDoes.filter(function(item) {
                 return item.ID == uniqueID
             })[0]
@@ -181,6 +183,7 @@ window.onload = function() {
                 tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
 
                 defineItemEditing(tmpItem, listOfToDoes[i].ID)
+                defineItemRemove(tmpItem, listOfToDoes[i].ID)
 
                 listContainer.appendChild(tmpItem);
             }
