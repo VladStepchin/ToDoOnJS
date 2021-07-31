@@ -108,7 +108,9 @@ window.onload = function() {
     }
 
     function isInputClicked(event) {
-        return event.path[0].nodeName == "INPUT"
+        debugger;
+        let path = event.path || (event.composedPath && event.composedPath());
+        return path[0].nodeName == "INPUT"
     }
 
     function updateListModel(uniqueID, value) {
