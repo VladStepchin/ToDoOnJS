@@ -182,3 +182,11 @@ button.btn.btn-red:active {
         margin-right: 10%;
     }
 }
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block;
+}
