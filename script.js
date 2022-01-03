@@ -1,228 +1,282 @@
-window.onload = function() {
-    let listContainer = document.getElementById("list-content");
-
-    let addIcon = document.getElementsByClassName("add-icon")[0];
-    let addContentButton = document.getElementsByClassName("create-item-button")[0];
-
-    let uploadToStorageButton = document.getElementsByClassName("save-list")[0];
-    let sortAscending = document.getElementsByClassName("sort")[0];
-    let downloadFromStorage = document.getElementsByClassName("restore-list")[0];
-
-    let listOfToDoes = [];
-
-    function initializeEventListener(htmlElement, event, action) {
-        htmlElement.addEventListener(event, () => {
-            action();
-        })
+class Storage {
+    constructor(storage = localStorage) {
+        this.storage = storage;
     }
 
-    initializeEventListener(addIcon, "click", openCreatePopup)
-    initializeEventListener(addContentButton, "click", addItem)
-    initializeEventListener(uploadToStorageButton, "click", uploadToStorage)
-    initializeEventListener(downloadFromStorage, "click", getFromStorage)
-    initializeEventListener(sortAscending, "click", sortByDateDescending)
+    set item(itemToStore) {
+        this.storage.setItem("todoList", JSON.stringify(itemToStore));
+    }
 
-    function openCreatePopup() {
+    get item() {
+        let list = JSON.parse(this.storage.getItem("todoList"));
+        list.forEach(item => item.date = new Date(item.date))
+        return list;
+    }
+}
 
-        let modal = document.getElementById("myModal");
+class TodoListModel {
+    constructor(todoList) {
+        this.todoList = todoList;
+        //change to Map to get rid of find()?
+    }
+    // leave return this.todoList or these functions should return nothing
+    // return item not the whole list
+    create(item) {
+        this.todoList.push(item)
+        return this.todoList; // return this
+    }
 
-        let span = document.getElementsByClassName("close")[0];
+    update(itemId, newValue) {
+        const itemToUpdate = this.todoList.find(item => item.ID === itemId)
+        itemToUpdate.content = newValue;
+        return this.todoList; // return this
+    }
 
-        let createItemButton = document.getElementsByClassName("create-item-button")[0];
+    delete(itemId) {
+        this.todoList = this.todoList.filter(item => item.ID !== itemId);
+        return this.todoList;
+    }
 
-        modal.style.display = "block";
+    sortByDateDescending() {
+        this.todoList.sort((a, b) => b.ID - a.ID)
+        return this.todoList;
+    }
 
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-        createItemButton.onclick = function() {
-            modal.style.display = "none";
-        }
+    get TodoList() {
+        return this.todoList;
+    }
 
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
+    set TodoList(newList) {
+        this.todoList = [...newList];
+    }
+}
+
+class TodoListView {
+    constructor(viewListContainer) {
+        this.viewListContainer = viewListContainer;
+
+        // action buttons
+        this.addIcon = document.getElementsByClassName("add-icon")[0];
+        this.addContentButton = document.getElementsByClassName("create-item-button")[0];
+        this.sortAscending = document.getElementsByClassName("sort")[0];
+        this.uploadToStorageButton = document.getElementsByClassName("save-list")[0];
+        this.downloadFromStorageButton = document.getElementsByClassName("restore-list")[0];
+
+        // popup DOM elements
+        this.popupWindow = document.getElementById("myModal");
+        this.closeIcon = document.getElementsByClassName("close")[0];
+        this.createItemButton = document.getElementsByClassName("create-item-button")[0];
+    }
+
+    openCreatePopup() {
+        this.addIcon.onclick = () => {
+            this.popupWindow.style.display = "block";
+            this.closeIcon.onclick = () => this.popupWindow.style.display = "none"
+            this.createItemButton.onclick = () => this.popupWindow.style.display = "none"
         }
     }
 
-    function generateItemMarkup(ID, content, currentDate) {
+    generateItemMarkup(ID, content, currentDate) {
+        const date = `${currentDate.getFullYear()}-${this.numberDecorator(currentDate.getMonth() + 1)}-${this.numberDecorator(currentDate.getDate())}`;
+        const time = `${this.numberDecorator(currentDate.getHours())}:${this.numberDecorator(currentDate.getMinutes())}:${this.numberDecorator(currentDate.getSeconds())}`;
+        const userFriendlyDateTime = `${date} ${time}`;
+        return this.renderItem(ID, content, userFriendlyDateTime)
+    }
 
-        let date = currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + currentDate.getDate();
-        let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+    numberDecorator(number) {
+        return number < 10 ? '0' + number : number;
+    }
 
-        let dateTime = date + ' ' + time;
-
+    renderItem(ID, content, userFriendlyDateTime) {
         return content ? `<div class="item-${ID} item-wrapper">
-                    <div class="content-wrapper">
-                        <p class="content-item item-${ID}"><b>${content}</b></p>
-                        <p class="date">Date: ${dateTime}</p>
-                    </div>
-                    <div class="perform-buttons-wrapper">
-                        <button class="btn btn-red item-${ID}">Edit</button>
-                        <button class="btn btn-blue remove-btn item-${ID}">Remove</button>
-                    </div>
-                </div>` : alert("Error")
+            <div class="content-wrapper">
+                <p class="content-item item-${ID}"><b>${content}</b></p>
+                <p class="date">Date: ${userFriendlyDateTime}</p>
+            </div>
+            <div class="perform-buttons-wrapper">
+                <button data-id=${ID} class="btn btn-red edit-btn item-${ID}">Edit</button>
+                <button data-id=${ID} class="btn btn-blue remove-btn item-${ID}">Remove</button>
+            </div>
+        </div>` : alert("Error")
     }
 
-    function addItem() {
+    bindAddTodo(callback) {
+        this.addContentButton.addEventListener("click", () => {
+            const currentDate = new Date();
+            const contentFromInput = document.getElementById("item-content");
+            const newListItem = this.createListElement();
+            const uniqueID = new Date().getTime();
 
-        let currentDate = new Date();
+            newListItem.innerHTML = this.generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
 
+            const newContentItem = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
+            contentFromInput.value = '';
 
-        let contentFromInput = document.getElementById("item-content");
-        let newListItem = document.createElement("li");
-        let uniqueID = new Date().getTime();
-
-        newListItem.className = "centered collection-item";
-        newListItem.innerHTML = generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
-
-        defineItemEditing(newListItem, uniqueID)
-        defineItemRemove(newListItem, uniqueID);
-
-        let listEntity = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
-        listContainer.appendChild(newListItem);
-        listOfToDoes.push(listEntity);
-
-        contentFromInput.value = '';
-
-    }
-
-    function defineItemRemove(newListItem, uniqueID) {
-
-        let buttonRemove = newListItem.querySelectorAll(`.remove-btn.item-${uniqueID}`)[0];
-
-        buttonRemove.addEventListener("click", function(event) {
-
-            listOfToDoes = listOfToDoes.filter(function(item) {
-                return item.ID != uniqueID
-            });
-
-            clearViewList();
-
-            event.stopPropagation();
-
-            reRenderList();
-
+            return callback(newContentItem);
         })
     }
 
-    function isInputClicked(event) {
-        return event.path[0].nodeName == "INPUT"
+    bindDeleteTodo(callback) {
+        // best practise to remove event listener
+        this.viewListContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-btn')) {
+                const id = parseInt(event.target.dataset.id)
+                callback(id)
+            }
+        })
     }
 
-    function updateListModel(uniqueID, value) {
-        for (let index = 0; index < listOfToDoes.length; index++) {
-            if (listOfToDoes[index].ID === uniqueID) {
-                listOfToDoes[index].content = value;
+    bindUpdateTodo(callback) {
+        this.viewListContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('edit-btn')) {
+                const id = parseInt(event.target.dataset.id)
+                this.openInlineEditing(id, callback)
             }
+        })
+    }
+
+    bindSortDescending(callback) {
+        this.sortAscending.onclick = () => {
+            callback();
         }
     }
 
-    function toogleDisplay(el) {
+    bindUploadToStorage(callback) {
+        this.uploadToStorageButton.onclick = () => {// this.uploadtostoragebutton.onclick = callback everywhere!!!!!!
+            callback()
+        }
+    }
+
+    bindUploadToStorage(callback) {
+        this.uploadToStorageButton.onclick = () => {
+            callback()
+        }
+    }
+
+    bindGetFromStorage(callback) {
+        this.downloadFromStorageButton.onclick = () => {
+            callback();
+        }
+    }
+
+    toogleDisplay(el) {
         el.style.display = (el.style.display === "") ? "none" : "";
     }
 
-    function openInlineEditing(newListItem, itemToEdit) {
+    openInlineEditing(uniqueID, callback) {
+        const itemContent = document.querySelectorAll(`.content-item.item-${uniqueID}`)[0].textContent;
+        const newListItem = this.createListElement();
 
-        let innerDiv = newListItem.querySelectorAll(".item-wrapper")[0]
-
-        toogleDisplay(innerDiv)
+        const listItem = document.querySelectorAll(`.item-${uniqueID}.item-wrapper`)[0].parentElement
+        this.toogleDisplay(listItem)
 
         let input = document.createElement('input');
-
         input.type = "string";
-
-        input.value = itemToEdit.content;
-
+        input.value = itemContent;
         input.onkeypress = "onKeyDown()"
 
         newListItem.appendChild(input)
+        this.viewListContainer.appendChild(newListItem);
 
-        input.addEventListener("keydown", function() {
+        input.onkeydown = () => {
+            if (window.event.keyCode !== 13)
+                return null
 
-            if (window.event.keyCode == 13) {
-
-                toogleDisplay(input);
-                toogleDisplay(innerDiv);
-
-                let elementToUpdate = document.querySelectorAll(`p.item-${itemToEdit.ID}`)[0];
-                elementToUpdate.innerHTML = `<b>${input.value}</b>`;
-
-                updateListModel(itemToEdit.ID, input.value)
-            }
-        })
-    }
-
-    function defineItemEditing(newListItem, uniqueID) {
-
-        newListItem.addEventListener("click", function(event) {
-
-            let itemToEdit = listOfToDoes.filter(function(item) {
-                return item.ID == uniqueID
-            })[0]
-
-            if (!isInputClicked(event)) {
-                openInlineEditing(newListItem, itemToEdit);
-            }
-
-        })
-    }
-
-    function uploadToStorage() {
-        localStorage.setItem("listOfToDoes", JSON.stringify(listOfToDoes));
-    }
-
-    function reRenderList() {
-
-        if (listOfToDoes.length) {
-            for (let i = 0; i < listOfToDoes.length; i++) {
-
-                let tmpItem = document.createElement("li");
-                tmpItem.className = "centered collection-item";
-                tmpItem.innerHTML = generateItemMarkup(listOfToDoes[i].ID, listOfToDoes[i].content, listOfToDoes[i].date)
-
-                defineItemEditing(tmpItem, listOfToDoes[i].ID)
-                defineItemRemove(tmpItem, listOfToDoes[i].ID)
-
-                listContainer.appendChild(tmpItem);
-            }
+            this.toogleDisplay(input);
+            this.toogleDisplay(listItem);
+            callback(uniqueID, input.value)
         }
     }
 
-    function getFromStorage() {
+    createListElement() {
+        const listItem = document.createElement('li');
+        listItem.className = "centered collection-item";
+        return listItem;
+    }
 
-        let storage = JSON.parse(localStorage.getItem("listOfToDoes"));
+    reRenderList(listOfTodoes) {
+        this.viewListContainer.innerHTML = ' ';
 
-        storage.map(function(item, i, arr) {
+        if (!listOfTodoes.length)
+            return null
 
-            let date = new Date(arr[i].date)
-            date.setDate(date.getDate() + 7)
-            return arr[i].date = date;
+        listOfTodoes.forEach(item => {
+            let tmpItem = document.createElement("li");
+            tmpItem.className = "centered collection-item";
+            tmpItem.innerHTML = this.generateItemMarkup(item.ID, item.content, item.date)
+
+            this.viewListContainer.appendChild(tmpItem);
         })
-
-        listOfToDoes = storage;
-
-        reRenderList();
     }
-
-    function sortByDateDescending() {
-
-        listOfToDoes.sort(function(a, b) {
-            return b.ID - a.ID;
-        })
-
-        clearViewList();
-
-        reRenderList();
-    }
-
-    function clearViewList() {
-
-        let mainUL = document.getElementById("list-content");
-
-        while (mainUL.firstChild)
-            mainUL.removeChild(mainUL.firstChild)
-    }
-
 }
+
+class Agregator {
+    constructor(todoListModel, todoListView, storage) {
+
+        this.todoListModel = todoListModel;
+        this.todoListView = todoListView;
+        this.storage = storage;
+
+        this.todoListView.bindAddTodo(this.handlerAddTodo); // this.handleAddTodo.bind(this) rebind to Controller
+
+        this.todoListView.bindDeleteTodo(this.handleDeleteTodo);
+        this.todoListView.bindUpdateTodo(this.handleUpdateTodo);
+        this.todoListView.bindSortDescending(this.handleSortDescending);
+        this.todoListView.bindUploadToStorage(this.handleUploadToStorage);
+        this.todoListView.bindGetFromStorage(this.handleGetFromStorage);
+
+        this.todoListView.openCreatePopup();
+    }
+
+    getTodoList() {
+        return this.todoListModel.TodoList;
+    }
+
+    setTodoList(newList) {
+        this.todoListModel.TodoList = newList;
+        this.todoListView.reRenderList(this.todoListModel.TodoList);
+    }
+
+    handleTodoListChange = list => {
+        this.todoListView.reRenderList(list);
+    }
+
+    handlerAddTodo = item => {
+        // this.todoListModel.create(item).getCurrentState => should return list of items (Array.from('set'))
+        this.todoListView.reRenderList(this.todoListModel.create(item))
+    }
+
+    handleUpdateTodo = (id, item) => {
+        this.todoListView.reRenderList(this.todoListModel.update(id, item))
+    }
+
+    handleDeleteTodo = id => {
+        this.todoListView.reRenderList(this.todoListModel.delete(id));
+    }
+
+    handleSortDescending = () => {
+        this.todoListView.reRenderList(this.todoListModel.sortByDateDescending())
+    }
+
+    handleUploadToStorage = () => {
+        this.storage.item = this.todoListModel.TodoList;
+    }
+
+    handleGetFromStorage = () => {
+        this.todoListModel.TodoList = this.storage.item;
+        this.todoListView.reRenderList(this.todoListModel.TodoList);
+    }
+}
+
+const todoList = [];
+const containerForList = document.getElementById("list-content");
+
+const agregator = new Agregator(new TodoListModel(todoList), new TodoListView(containerForList), new Storage(localStorage));
+
+// different js files
+// Read about Mediator(pattern) !!!!
+// add logs for model actions. Change View to Console (to add everyhting to console.log())
+// create two calsses todolistconsoleView writes everyhting in console
+// second class ViewAgregator takes array of views and have the same methods i from the Views. CHANGE TodoListView to ViewAgregator
+
+
