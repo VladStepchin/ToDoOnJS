@@ -2,8 +2,6 @@ export default class Model {
     constructor(todoList) {
         this.todoList = todoList;
     }
-    // переробити на Set не вдастся бо при отриманні значень з DOM ми скоріше за все створюємо інший об'єкт,
-    // а порівняння відбувається по посиланню а не по значенню
 
     get currentState() {
         return this.todoList;

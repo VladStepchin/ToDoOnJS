@@ -4,6 +4,10 @@ export default class BrowserView {
 
         // action buttons
         this.addIcon = document.getElementsByClassName("add-icon")[0];
+        this.addContentButton = document.getElementsByClassName("create-item-button")[0];
+        this.sortAscending = document.getElementsByClassName("sort")[0];
+        this.uploadToStorageButton = document.getElementsByClassName("save-list")[0];
+        this.downloadFromStorageButton = document.getElementsByClassName("restore-list")[0];
 
         // popup DOM elements
         this.popupWindow = document.getElementById("myModal");
@@ -44,38 +48,49 @@ export default class BrowserView {
     }
 
     bindAddTodo(callback) {
-        const currentDate = new Date();
-        const contentFromInput = document.getElementById("item-content");
-        const newListItem = this.createListElement();
-        const uniqueID = new Date().getTime();
+        this.addContentButton.addEventListener("click", () => {
+            const currentDate = new Date();
+            const contentFromInput = document.getElementById("item-content");
+            const newListItem = this.createListElement();
+            const uniqueID = new Date().getTime();
 
-        newListItem.innerHTML = this.generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
+            newListItem.innerHTML = this.generateItemMarkup(uniqueID, contentFromInput.value, currentDate);
 
-        const newContentItem = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
-        contentFromInput.value = '';
-        return callback(newContentItem);
+            const newContentItem = { content: contentFromInput.value, ID: uniqueID, date: currentDate }
+            contentFromInput.value = '';
+
+            return callback(newContentItem);
+        })
     }
 
     bindDeleteTodo(callback) {
-        const id = parseInt(event.target.dataset.id)
-        callback(id)
+        this.viewListContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-btn')) {
+                const id = parseInt(event.target.dataset.id)
+                callback(id)
+            }
+        })
     }
 
     bindUpdateTodo(callback) {
-        const id = parseInt(event.target.dataset.id)
-        this.openInlineEditing(id, callback)
+        this.viewListContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('edit-btn')) {
+                const id = parseInt(event.target.dataset.id)
+                this.openInlineEditing(id, callback)
+            }
+        })
     }
 
     bindSortDescending(callback) {
-        callback();
+        this.sortAscending.onclick = callback;
     }
 
     bindUploadToStorage(callback) {
-        callback();
+        this.uploadToStorageButton.onclick = callback;
     }
 
     bindGetFromStorage(callback) {
-        callback();
+        this.downloadFromStorageButton.onclick = callback;
     }
 
     toogleDisplay(el) {

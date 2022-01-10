@@ -1,47 +1,43 @@
 export default class Agregator {
-    // viewMediator => viewAgregator
-    constructor(todoListModel, viewMediator, storage) {
+    constructor(todoListModel, viewAgregator, storage) {
         this.todoListModel = todoListModel;
-        this.viewMediator = viewMediator;
+        this.viewAgregator = viewAgregator;
         this.storage = storage;
     }
 
     run(){
-        this.viewMediator.bindAddTodo(this.handlerAddTodo);
-        this.viewMediator.bindDeleteTodo(this.handleDeleteTodo);
-        this.viewMediator.bindUpdateTodo(this.handleUpdateTodo);
-        this.viewMediator.bindSortDescending(this.handleSortDescending);
-        this.viewMediator.bindUploadToStorage(this.handleUploadToStorage);
-        this.viewMediator.bindGetFromStorage(this.handleGetFromStorage);
+        this.viewAgregator.bindAddTodo(this.handlerAddTodo.bind(this));
+        this.viewAgregator.bindDeleteTodo(this.handleDeleteTodo.bind(this));
+        this.viewAgregator.bindUpdateTodo(this.handleUpdateTodo.bind(this));
+        this.viewAgregator.bindSortDescending(this.handleSortDescending.bind(this));
+        this.viewAgregator.bindUploadToStorage(this.handleUploadToStorage.bind(this));
+        this.viewAgregator.bindGetFromStorage(this.handleGetFromStorage.bind(this));
 
-        this.viewMediator.openCreatePopup();
+        this.viewAgregator.openCreatePopup();
     }
 
-    //redo to the syntax of run() method;
-    // arrow functions should return value!!!
-
-    handlerAddTodo = item => {
-        this.viewMediator.reRenderList(this.todoListModel.create(item).currentState);
+    handlerAddTodo(item) {  
+        this.viewAgregator.reRenderList(this.todoListModel.create(item).currentState);
     }
 
-    handleUpdateTodo = (id, item) => {
-        this.viewMediator.reRenderList(this.todoListModel.update(id, item).currentState);
+    handleUpdateTodo(id, item){
+        this.viewAgregator.reRenderList(this.todoListModel.update(id, item).currentState);
     }
 
-    handleDeleteTodo = id => {
-        this.viewMediator.reRenderList(this.todoListModel.delete(id).currentState);
+    handleDeleteTodo(id){
+        this.viewAgregator.reRenderList(this.todoListModel.delete(id).currentState);
     }
 
-    handleSortDescending = () => {
-        this.viewMediator.reRenderList(this.todoListModel.sortByDateDescending().currentState);
+    handleSortDescending(){
+        this.viewAgregator.reRenderList(this.todoListModel.sortByDateDescending().currentState);
     }
 
-    handleUploadToStorage = () => {
+    handleUploadToStorage(){
         this.storage.item = this.todoListModel.currentState;
     }
 
-    handleGetFromStorage = () => {
+    handleGetFromStorage(){
         this.todoListModel.currentState = this.storage.item;
-        this.viewMediator.reRenderList(this.todoListModel.currentState);
+        this.viewAgregator.reRenderList(this.todoListModel.currentState);
     }
 }
