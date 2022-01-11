@@ -17,19 +17,19 @@ export default class Controller {
     }
 
     handlerAddTodo(item) {  
-        this.viewAgregator.execute("reRenderList", (this.todoListModel.create(item).currentState));
+        this.viewAgregator.execute("reRenderList", this.todoListModel.create(item).currentState);
     }
 
     handleUpdateTodo(id, item){
-        this.viewAgregator.execute("reRenderList", (this.todoListModel.update(id, item).currentState));
+        this.viewAgregator.execute("reRenderList", this.todoListModel.update(id, item).currentState);
     }
 
     handleDeleteTodo(id){
-        this.viewAgregator.execute("reRenderList", (this.todoListModel.delete(id).currentState));
+        this.viewAgregator.execute("reRenderList", this.todoListModel.delete(id).currentState);
     }
 
     handleSortDescending(){
-        this.viewAgregator.execute("reRenderList", (this.todoListModel.sortByDateDescending().currentState));
+        this.viewAgregator.execute("reRenderList", this.todoListModel.sortByDateDescending().currentState);
     }
 
     handleUploadToStorage(){
@@ -38,6 +38,6 @@ export default class Controller {
 
     handleGetFromStorage(){
         this.todoListModel.currentState = this.storage.item;
-        this.viewAgregator.execute("reRenderList", (this.todoListModel.currentState));
+        this.viewAgregator.execute("reRenderList", this.todoListModel.currentState);
     }
 }

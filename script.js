@@ -12,5 +12,5 @@ const controller = new Controller(new Model(todoList), new ViewAgregator([new Br
 controller.run()
 
 // jest tests add to this todo list!!!
-// test Storage, viewAgregator, model, finally test Agregator
+// test Storage, viewAgregator, model, 
 // handle
